@@ -1,0 +1,640 @@
+<head>
+    <meta charset="UTF-8">
+    <style>
+    #code-list {
+      grid-column: 1 / span 2;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .code-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background-color: #f4f4f4;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+        body {
+            background-color: #C0C0C0; 
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        #taskbar {
+            background-color: #000080; 
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding: 0 5px; 
+            position: absolute;
+            bottom: 0; 
+            width: 100%;
+        }
+
+        .task-button {
+            color: white;
+            margin-right: 5px; 
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .task-button1 {
+            color: black;
+            margin-right: 5px; 
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .battery-status {
+            color: white;
+            margin-left: auto;
+            margin-right: 10px;
+        }
+
+        .battery-bar {
+            width: 100px;
+            height: 10px;
+            background-color: #fff;
+            border: 1px solid #000;
+            border-radius: 5px;
+            position: relative;
+            margin-right: 5px;
+        }
+
+        .battery-fill {
+            height: 100%;
+            background-color: #00FF00;
+            border-radius: 5px;
+        }
+
+    .window {
+        border: 2px solid #000080;
+        background-color: white;
+        position: absolute;
+        min-width: 200px;
+        min-height: 150px;
+        max-width: 90%;
+        max-height: 90%;
+        padding: 5px;
+        display: none;
+        font-size: 12px;
+        overflow: auto;
+    }
+
+        .draggable {
+            cursor: move;
+        }
+
+
+        #memo-window { top: 30px; left: 30px; }
+        #clock-window { top: 70px; left: 30px; }
+        
+        textarea {
+            width: 98%;
+            height: 50px;
+            margin-bottom: 10px;
+        }
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f9;
+    }
+    .calendar {
+      width: 300px;
+      border: 1px solid #ddd;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      background-color: #fff;
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background-color: #000080;
+      color: white;
+
+    }
+    .calendar-header button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .calendar-header h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .calendar-body {
+      padding: 10px;
+    }
+    .calendar-weekdays,
+    .calendar-dates {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-size: 14px;
+    }
+    .calendar-dates div {
+      padding: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .calendar-dates div:hover {
+      background-color: #000080;
+    }
+    .calendar-dates .today {
+      background-color: #000080;
+      color: white;
+    }
+        #previewa {
+            max-width: 100%;
+            max-height: 400px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            display: none;
+        }
+        video {
+            max-width: 100%;
+            max-height: 400px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="taskbar">
+        <div class="task-button" onclick="toggleWindow('Tool-window')"><h2>&nbsp;CRAZE OS I 0.6</h2></div>
+        <div class="battery-status">
+            <div class="battery-bar">
+                <div class="battery-fill" id="battery-fill" style="width: 100%;"></div>
+            </div>
+            <span id="battery-percentage">100%</span>
+            <span id="battery-status-text">充電中</span>
+        </div>
+    </div>
+
+    <div id="Tool-window" class="window draggable">
+        <div class="draggable" onmousedown="startDrag(event, 'Tool-window')">
+            <strong>ToolBox</strong>
+        </div><br>
+        <div class="task-button1" onclick="toggleWindow('clock-window', updateClock)">時計</div>
+        <div class="task-button1" onclick="toggleWindow('memo-window')">メモ帳</div>
+        <div class="task-button1" onclick="toggleWindow('media-window')">メディアプレーヤー</div>
+        <div class="task-button1" onclick="toggleWindow('COCE-window')">CRAZE OS Code Editor 0.1</div>
+    </div>
+
+<div id="COCE-window" class="window draggable">
+    <div class="draggable" onmousedown="startDrag(event, 'COCE-window')">
+        <strong>CRAZE OS Code Editor 0.1</strong>
+    </div>
+<body>
+  <div id="code-list"></div>
+  <textarea id="code" placeholder="Write HTML, CSS, and JS here..."></textarea>
+  <iframe id="preview" width="800" height="600"></iframe>
+  <div class="actions">
+    <button onclick="saveData()">Save</button>
+    <button onclick="clearData()">Clear</button>
+  </div>
+
+</div>
+    <div id="memo-window" class="window draggable">
+        <div class="draggable" onmousedown="startDrag(event, 'memo-window')">
+            <strong>メモ帳</strong>
+        </div>
+        <textarea id="memoArea" placeholder="ここにメモを入力"></textarea><br>
+        <button onclick="saveMemo()">保存</button>
+        <button onclick="loadMemo()">読み込み</button>
+        <button onclick="clearMemo()">クリア</button>
+    </div>
+
+    <div id="media-window" class="window draggable">
+        <div class="draggable" onmousedown="startDrag(event, 'media-window')">
+            <strong>メディアプレーヤー</strong>
+        </div>
+    <input type="file" id="fileInput" accept="image/*, video/*">
+    <br>
+    <img id="previewa" alt="プレビュー画像">
+    <video id="videoPreview" controls></video>
+    </div>
+
+    <div id="clock-window" class="window draggable">
+        <div class="draggable" onmousedown="startDrag(event, 'clock-window')">
+            <strong>時計</strong>
+        </div>
+        <h2><div id="tokei"></div></h2>
+  <div class="calendar">
+    <div class="calendar-header">
+      <button onclick="changeMonth(-1)">&lt;</button>
+      <h3 id="monthYear"></h3>
+      <button onclick="changeMonth(1)">&gt;</button>
+    </div>
+    <div class="calendar-body">
+      <div class="calendar-weekdays">
+        <div>日</div>
+        <div>月</div>
+        <div>火</div>
+        <div>水</div>
+        <div>木</div>
+        <div>金</div>
+        <div>土</div>
+      </div>
+      <div class="calendar-dates" id="calendarDates"></div>
+    </div>
+  </div><br><hr>
+<input type="number" id="hours" placeholder="時" min="0" style="width: 50px;">
+<input type="number" id="minutes" placeholder="分" min="0" max="59" style="width: 50px;">
+<input type="number" id="seconds" placeholder="秒" min="0" max="59" style="width: 50px;">
+<h1><span id="timer">00:00:00</span></h1>
+<button onclick="startTimer()">スタート</button>
+<hr>
+        <div class="stopwatch">
+            <h1><div class="time" id="display">00:00:00.000</div></h1>
+            <div class="buttons">
+                <button class="button start" onclick="startStopwatch()">スタート</button>
+                <button class="button stop" onclick="stopStopwatch()">ストップ</button>
+                <button class="button reset" onclick="resetStopwatch()">リセット</button>
+            </div>
+        </div>
+    </div>
+<script>
+    function adjustWindowSize(windowId) {
+        const windowElement = document.getElementById(windowId);
+        if (windowElement) {
+            windowElement.style.width = `${windowElement.scrollWidth}px`;
+            windowElement.style.height = `${windowElement.scrollHeight}px`;
+
+            const maxWidth = window.innerWidth * 0.9;
+            const maxHeight = window.innerHeight * 0.9;
+
+            if (windowElement.offsetWidth > maxWidth) {
+                windowElement.style.width = `${maxWidth}px`;
+            }
+            if (windowElement.offsetHeight > maxHeight) {
+                windowElement.style.height = `${maxHeight}px`;
+            }
+        }
+    }
+
+    function toggleWindow(windowId) {
+        const windowElement = document.getElementById(windowId);
+        if (windowElement.style.display === "none") {
+            windowElement.style.display = "block";
+            adjustWindowSize(windowId); // 表示する際にサイズを調整
+        } else {
+            windowElement.style.display = "none";
+        }
+    }
+</script>
+<script>
+let timer;
+function startTimer() {
+    const hours = parseInt(document.getElementById("hours").value) || 0;
+    const minutes = parseInt(document.getElementById("minutes").value) || 0;
+    const seconds = parseInt(document.getElementById("seconds").value) || 0;
+    let totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    
+    if (timer) {
+        clearInterval(timer);
+    }
+    timer = setInterval(function() {
+        if (totalSeconds <= 0) {
+            clearInterval(timer);
+            document.getElementById("timer").innerText = "タイムアップ！";
+        } else {
+            totalSeconds--;
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            const s = totalSeconds % 60;
+            document.getElementById("timer").innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+    }, 1000);
+}
+</script>
+
+    </div>
+
+  <script>
+    const codeInput = document.getElementById('code');
+    const previewFrame = document.getElementById('preview');
+    const codeList = document.getElementById('code-list');
+
+    let savedCodes = JSON.parse(localStorage.getItem('savedCodes')) || {};
+
+    const updateCodeList = () => {
+      codeList.innerHTML = '';
+      Object.keys(savedCodes).forEach(name => {
+        const item = document.createElement('div');
+        item.className = 'code-item';
+
+        const input = document.createElement('input');
+        input.value = name;
+        input.addEventListener('change', () => renameCode(name, input.value));
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = () => deleteCode(name);
+
+        item.appendChild(input);
+        item.addEventListener('click', () => loadCode(name));
+        item.appendChild(deleteButton);
+        codeList.appendChild(item);
+      });
+    };
+
+    const saveData = () => {
+      const name = prompt('Enter a name for this code:');
+      if (name) {
+        savedCodes[name] = codeInput.value;
+        localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
+        updateCodeList();
+        alert('Code saved!');
+      }
+    };
+
+    const loadCode = (name) => {
+      codeInput.value = savedCodes[name] || '';
+      updatePreview();
+    };
+
+    const deleteCode = (name) => {
+      if (confirm(`Are you sure you want to delete "${name}"?`)) {
+        delete savedCodes[name];
+        localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
+        updateCodeList();
+      }
+    };
+
+    const renameCode = (oldName, newName) => {
+      if (newName && oldName !== newName) {
+        savedCodes[newName] = savedCodes[oldName];
+        delete savedCodes[oldName];
+        localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
+        updateCodeList();
+      }
+    };
+
+    const updatePreview = () => {
+      previewFrame.srcdoc = codeInput.value;
+    };
+
+    const clearData = () => {
+      if (confirm('Are you sure you want to clear all code?')) {
+        codeInput.value = '';
+        updatePreview();
+      }
+    };
+
+    codeInput.addEventListener('input', updatePreview);
+    updateCodeList();
+  </script>
+<script>
+function showTime() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = ('0' + (now.getMonth() + 1)).slice(-2);
+  const day = ('0' + now.getDate()).slice(-2);
+  let hour = now.getHours();
+  const minute = ('0' + now.getMinutes()).slice(-2);
+  const second = ('0' + now.getSeconds()).slice(-2);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+
+  hour = hour % 12;
+  hour = hour || 12;
+
+  const formattedTime = `${year}/${month}/${day} ${hour}:${minute}:${second} ${ampm}`;
+  document.getElementById('tokei').textContent = formattedTime;
+}
+
+setInterval(showTime, 1000);
+
+showTime();
+</script>
+<script>
+  const monthNames = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
+  let currentDate = new Date();
+
+  function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const calendarDates = document.getElementById("calendarDates");
+    calendarDates.innerHTML = "";
+
+    document.getElementById("monthYear").textContent = `${year}年 ${monthNames[month]}`;
+
+    for (let i = 0; i < firstDay; i++) {
+      calendarDates.innerHTML += "<div></div>";
+    }
+    for (let date = 1; date <= lastDate; date++) {
+      const dateDiv = document.createElement("div");
+      dateDiv.textContent = date;
+      const today = new Date();
+      if (
+        date === today.getDate() &&
+        month === today.getMonth() &&
+        year === today.getFullYear()
+      ) {
+        dateDiv.classList.add("today");
+      }
+      calendarDates.appendChild(dateDiv);
+    }
+  }
+
+  function changeMonth(delta) {
+    currentDate.setMonth(currentDate.getMonth() + delta);
+    renderCalendar();
+  }
+
+  function updateCalendarIfNeeded() {
+    const now = new Date();
+    if (
+      now.getDate() !== currentDate.getDate() ||
+      now.getMonth() !== currentDate.getMonth() ||
+      now.getFullYear() !== currentDate.getFullYear()
+    ) {
+      currentDate = now;
+      renderCalendar();
+    }
+  }
+
+  renderCalendar();
+  setInterval(updateCalendarIfNeeded, 10000);
+</script>
+   <script>
+        let startTime, updatedTime, timerInterval;
+        let elapsedTime = 0;
+        let isRunning = false;
+
+        function updateDisplay(time) {
+            const hours = Math.floor((time / (1000 * 60 * 60)) % 24).toString().padStart(2, '0');
+            const minutes = Math.floor((time / (1000 * 60)) % 60).toString().padStart(2, '0');
+            const seconds = Math.floor((time / 1000) % 60).toString().padStart(2, '0');
+            const milliseconds = (time % 1000).toString().padStart(3, '0');
+            document.getElementById("display").textContent = `${hours}:${minutes}:${seconds}.${milliseconds}`;
+        }
+
+        function startStopwatch() {
+            if (!isRunning) {
+                startTime = Date.now() - elapsedTime;
+                timerInterval = setInterval(() => {
+                    updatedTime = Date.now() - startTime;
+                    updateDisplay(updatedTime);
+                }, 10);
+                isRunning = true;
+            }
+        }
+
+        function stopStopwatch() {
+            if (isRunning) {
+                clearInterval(timerInterval);
+                elapsedTime = updatedTime;
+                isRunning = false;
+            }
+        }
+
+        function resetStopwatch() {
+            clearInterval(timerInterval);
+            elapsedTime = 0;
+            isRunning = false;
+            updateDisplay(elapsedTime);
+        }
+
+        function toggleWindow(windowId, updateFunc) {
+            const windowElement = document.getElementById(windowId);
+            windowElement.style.display = (windowElement.style.display === 'block') ? 'none' : 'block';
+            if (updateFunc) updateFunc();
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toUTCString();
+            setTimeout(updateClock, 1000);
+        }
+
+        function startDrag(e, elementId) {
+            const element = document.getElementById(elementId);
+            let offsetX = e.clientX - element.getBoundingClientRect().left;
+            let offsetY = e.clientY - element.getBoundingClientRect().top;
+
+            function dragMove(e) {
+                element.style.left = e.clientX - offsetX + 'px';
+                element.style.top = e.clientY - offsetY + 'px';
+            }
+
+            function dragEnd() {
+                document.removeEventListener('mousemove', dragMove);
+                document.removeEventListener('mouseup', dragEnd);
+            }
+
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', dragEnd);
+        }
+
+        function saveMemo() {
+            const memoContent = document.getElementById('memoArea').value;
+            localStorage.setItem('memo', memoContent);
+            alert('メモを保存しました');
+        }
+
+        function loadMemo() {
+            const memoContent = localStorage.getItem('memo');
+            if (memoContent !== null) {
+                document.getElementById('memoArea').value = memoContent;
+                alert('メモを読み込みました');
+            } else {
+                alert('保存されたメモはありません');
+            }
+        }
+
+        function clearMemo() {
+            document.getElementById('memoArea').value = '';
+            localStorage.removeItem('memo');
+            alert('メモをクリアしました');
+        }
+
+        updateClock(); 
+   </script>
+
+<script>
+    function updateBatteryStatus(battery) {
+        const batteryPercentage = Math.round(battery.level * 100);
+        document.getElementById('battery-percentage').textContent = batteryPercentage + '%';
+        
+        const batteryFill = document.getElementById('battery-fill');
+        batteryFill.style.width = batteryPercentage + '%';
+        
+        const statusText = document.getElementById('battery-status-text');
+        statusText.textContent = battery.charging ? '充電中' : '放電中';
+        
+        if (batteryPercentage > 50) {
+            batteryFill.style.backgroundColor = '#00FF00';
+        } else if (batteryPercentage > 20) {
+            batteryFill.style.backgroundColor = '#FFA500';
+        } else {
+            batteryFill.style.backgroundColor = '#FF0000';
+        }
+    }
+
+    function monitorBattery() {
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(function(battery) {
+                updateBatteryStatus(battery);
+                
+                battery.addEventListener('levelchange', () => updateBatteryStatus(battery));
+                battery.addEventListener('chargingchange', () => updateBatteryStatus(battery));
+            });
+        } else {
+            console.log('Battery Status APIはサポートされていません。');
+            document.getElementById('battery-status-text').textContent = 'バッテリー情報取得不可';
+        }
+    }
+
+    monitorBattery();
+</script>
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const imagePreview = document.getElementById('previewa');
+            const videoPreview = document.getElementById('videoPreview');
+            
+            if (file) {
+                const fileType = file.type;
+                const reader = new FileReader();
+                
+                if (fileType.startsWith('image/')) {
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                        videoPreview.style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                } else if (fileType.startsWith('video/')) {
+                    reader.onload = function(e) {
+                        videoPreview.src = e.target.result;
+                        videoPreview.style.display = 'block';
+                        imagePreview.style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('画像または動画を選択してください。');
+                }
+            } else {
+                imagePreview.style.display = 'none';
+                videoPreview.style.display = 'none';
+            }
+        });
+    </script>
+</body>
