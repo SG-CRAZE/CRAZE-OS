@@ -1,0 +1,1413 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <style>
+
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            z-index: 1;
+            display: none;
+        }
+
+#message {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: blue;
+    z-index: 2;
+    font-size: 16px;
+    font-family: monospace;
+}
+
+    @font-face {
+      font-family: 'DSEG14Modern';
+      src: url('data:font/ttf;base64,') format('truetype');
+    }
+
+        body {
+            display: flex;
+        }
+        .adisplay {
+            width: 270px;
+            height: 60px;
+            margin-bottom: 20px;
+          font-size: 34px;
+          font-family: 'DSEG14Modern';
+        }
+        .buttons1 {
+            display: grid;
+            grid-template-columns: repeat(4, 60px);
+            gap: 10px;
+        }
+        .buttons1 button1 {
+            width: 60px;
+            height: 60px;
+            font-size: 20px;
+        }
+.calculator {
+    padding: 10px;
+    border-radius: 10px;
+}
+        .buttons1 button1:hover {
+            background-color: #ddd;
+        }
+        .buttons1 button1:active {
+            background-color: #bbb;
+        }
+        .equal {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .equal:hover {
+            background-color: #45a049;
+        }
+        .clear {
+            background-color: #f44336;
+            color: white;
+        }
+        .clear:hover {
+            background-color: #e53935;
+        }
+
+    #code-list {grid-column: 1 / span 2; display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;}
+    .code-item {display: flex; align-items: center; gap: 5px; background-color: #f4f4f4; padding: 5px 10px; cursor: pointer;}
+    body {background-color: #C0C0C0; font-family: Arial, sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center;}
+    #taskbar {background-color: #000080; height: 40px; display: flex; align-items: center; padding: 0 5px; position: absolute; bottom: 0; width: 100%; background-color: rgba(0, 0, 128, 0.3)
+}
+    .task-button1 {color: black; margin-right: 5px; cursor: pointer; font-size: 14px;}
+    .task-button {color: white; margin-right: 5px; cursor: pointer; font-size: 14px;}
+    .battery-status {color: white; margin-left: auto; margin-right: 10px;}
+    .battery-bar {width: 100px; height: 10px; background-color: #fff; border: 1px solid #000; border-radius: 5px; position: relative; margin-right: 5px;}
+    .battery-fill {height: 100%; background-color: #00FF00; border-radius: 5px;}
+    .window {border: 2px solid #000080; background-color:white; position: absolute; min-width: 120px; min-height: 150px; max-width: 90%; max-height: 90%; padding: 5px; display: none; font-size: 12px; overflow: auto; background-color: rgba(600, 600, 600, 0.5)
+}
+    .draggable {cursor: move;}
+    textarea {margin-bottom: 10px;}
+    #memo-window { top: 30px; left: 30px; }
+    #clock-window { top: 70px; left: 30px; }
+    .calendar {width: 300px; border: 1px solid #ddd; background-color: #fff;}
+    .calendar-header {display: flex; justify-content: space-between; align-items: center; padding: 15px; background-color: #000080; color: white;}
+    .calendar-header button {background: none; border: none; color: white; font-size: 18px; cursor: pointer;}
+    .calendar-header h3 {margin: 0; font-size: 18px;}
+    .calendar-body {padding: 10px;}
+    .calendar-weekdays,
+    .calendar-dates {display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 14px;}
+    .calendar-dates div {padding: 8px; cursor: pointer; transition: background-color 0.2s;}
+    .calendar-dates div:hover {background-color: #000080;}
+    .calendar-dates .today {background-color: #000080; color: white;}
+    #previewa {max-width: 100%; max-height: 400px; margin-top: 10px; border: 1px solid #ccc; display: none;}
+    video {max-width: 100%; max-height: 400px; margin-top: 10px; border: 1px solid #ccc; display: none;}
+    #notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #fff3f3;
+      color: #b30000;
+      border: 2px solid #ffcccc;
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      font-family: sans-serif;
+      display: none;
+      z-index: 9999;
+      white-space: normal;
+      line-height: 1.5em;
+    }
+    </style>
+</head>
+<body>
+  <div id="notification"></div><audio id="quakeSound" src="sound.mp3" preload="auto"></audio>
+<div id="taskbar"><div class="task-button" onclick="toggleWindow('Tool-window')"><h2>&nbsp;CRAZE OS II 0.4A</h2></div><div class="battery-status"><div class="battery-bar"><div class="battery-fill" id="battery-fill" style="width: 100%;"></div></div><span id="battery-percentage">100%</span><span id="battery-status-text">充電中</span></div></div>
+
+  <script>
+    const API_URL = "https://api.p2pquake.net/v2/jma/quake";
+    const NOTIFIED_IDS_KEY = "notifiedQuakeIds";
+    const INTERVAL_MS = 10000;
+    const SHOW_DURATION_MS = 5000;
+
+    const notificationBox = document.getElementById("notification");
+    const quakeSound = document.getElementById("quakeSound");
+
+    function loadStoredIds() {
+      const data = localStorage.getItem(NOTIFIED_IDS_KEY);
+      return data ? JSON.parse(data) : [];
+    }
+
+    function saveStoredIds(ids) {
+      localStorage.setItem(NOTIFIED_IDS_KEY, JSON.stringify(ids));
+    }
+
+    async function fetchEarthquakes() {
+      try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error("取得失敗");
+        const data = await res.json();
+
+        const storedIds = loadStoredIds();
+        let newIds = [...storedIds];
+
+        for (const quake of data) {
+          const id = quake.id;
+          if (!storedIds.includes(id)) {
+            notifyQuake(quake);
+            newIds.push(id);
+          }
+        }
+
+        if (newIds.length > 100) newIds = newIds.slice(-100);
+        saveStoredIds(newIds);
+      } catch (err) {
+        console.error("地震データ取得エラー:", err);
+      }
+    }
+
+    function notifyQuake(quake) {
+      const eq = quake.earthquake;
+      const point = quake.points?.[0] || {};
+      const text = `
+【発生時刻】${eq.time}<br>
+【震源地】${eq.hypocenter.name}<br>
+【深さ】${eq.hypocenter.depth}km<br>
+【マグニチュード】M${eq.hypocenter.magnitude}<br>
+【最大震度】${scaleToString(eq.maxScale)}<br>
+【観測地】${point.addr || "不明"}<br>
+【津波】${eq.domesticTsunami}
+      `.trim();
+
+      showNotification(text);
+      quakeSound.currentTime = 0;
+      quakeSound.play().catch(err => console.warn("音声再生エラー:", err));
+    }
+
+    function scaleToString(scale) {
+      const scaleMap = {
+        10: "1", 20: "2", 30: "3", 40: "4",
+        45: "5弱", 50: "5強", 55: "6弱",
+        60: "6強", 70: "7"
+      };
+      return scaleMap[scale] || "不明";
+    }
+
+    function showNotification(message) {
+      notificationBox.innerHTML = message;
+      notificationBox.style.display = "block";
+      setTimeout(() => {
+        notificationBox.style.display = "none";
+      }, SHOW_DURATION_MS);
+    }
+
+    // Ctrl + Shift + K でテスト通知
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "k") {
+        const testMessage = `
+【発生時刻】テスト用<br>
+【震源地】トカラ列島近海<br>
+【深さ】20km<br>
+【マグニチュード】M3.5<br>
+【最大震度】3<br>
+【観測地】鹿児島十島村悪石島<br>
+【津波】なし
+        `.trim();
+        showNotification(testMessage);
+        quakeSound.currentTime = 0;
+        quakeSound.play().catch(err => console.warn("音声再生エラー:", err));
+      }
+    });
+
+    // 自動取得
+    fetchEarthquakes();
+    setInterval(fetchEarthquakes, INTERVAL_MS);
+  </script>
+    <div id="Tool-window" class="window draggable">
+        <div class="draggable" onmousedown="startDrag(event, 'Tool-window')">
+            <strong>ToolBox</strong>
+        </div><br>
+        <div class="task-button1" onclick="toggleWindow('clock-window', updateClock)">時計</div>
+        <div class="task-button1" onclick="toggleWindow('memo-window')">メモ帳</div>
+        <div class="task-button1" onclick="toggleWindow('media-window')">メディアプレーヤー</div>
+        <div class="task-button1" onclick="toggleWindow('COCE-window')">CRAZE OS Code Editor 0.2</div>
+        <div class="task-button1" onclick="toggleWindow('CALC-window')">電卓</div>
+        <div class="task-button1" onclick="toggleWindow('SETT-window')">設定</div>
+        <div class="task-button1" onclick="toggleWindow('crazeoslunc-window')">CRAZE OSの追加コンテンツのランチャー</div>
+        <button onclick="showMessage()">シャットダウン</button>
+    </div>
+
+    <div id="crazeoslunc-window" class="window draggable">
+        <div class="draggable" onmousedown="startDrag(event, 'crazeoslunc-window')">
+            <strong>Launcher for additional content for CRAZE OS</strong>
+            </div><br>
+        <div class="task-button1" onclick="toggleWindow('brakotgm-window')">Breakout Game</div>
+        <div class="task-button1" onclick="toggleWindow('wiki-window')">CRAZE OS Wiki</div>
+</div>
+
+<div id="wiki-window" class="window draggable">
+    <div class="draggable" onmousedown="startDrag(event, 'wiki-window')">
+        <strong>CRAZE OS WIKI</strong>
+    </div>
+<h1>2025/06/21 23:19:23 - CRAZE OSの歴史</h1><hr>
+CRAZE OSは考案されたのはおおよそ2022年からでした。<br>
+しかしOSを作りたいと思っていたものの一切何の言語でもプログラミングすることができず、さらに聞く相手なども存在しないため。開発は難航し、案だけに終わり開発されていませんでした。<br>
+しかし、そこで転機が訪れます。<br>
+2024年にChatGPTというAIが登場し、これによりコードを書いてもらえたりすることを知り、独自でアプリを作っていきました。<br>
+当時は時計アプリなどを開発してもらいました。その中で最も大きなプロジェクトはCRAZE Multiple Element Clockでした。これはフルAIで作られたもので最も大きなプロジェクトでした。全くと言っていいほど知識はなく、ボタンの名前一つ変えるのにもAIに頼っていました。<br>
+しかし2024年9月に＜script＞や＜body＞をコード内に複数置くことができることが発見され、そのあと様々な研究が行われ今、js以外はほぼ100%自分で制作できるレベルになりました。まだまだ実力不足ですが、これからも技術をさらに増やしていきたいと考えています。もしChatGPTに出会っていなければ、もしかすると永遠にプログラミングに触れることなく人生を終えたかもしれません。<br>
+</div>
+
+<div id="brakotgm-window" class="window draggable">
+    <div class="draggable" onmousedown="startDrag(event, 'brakotgm-window')">
+        <strong>CRAZE OS Breakout Game</strong>
+    </div>
+  <style>
+    #menu {
+      text-align: center;
+      margin-top: 40px;
+    }
+    #extraMenu {
+      display: none;
+      margin-top: 20px;
+    }
+  </style>
+
+<div id="menu">
+  <h2>難易度を選択</h2>
+  <button onclick="startGame('easy')">初級</button>
+  <button onclick="startGame('normal')">中級</button>
+  <button onclick="startGame('hard')">上級</button>
+
+  <div id="extraMenu">
+    <hr>
+    <h3>EXTRAステージ</h3>
+    <button onclick="startGame('lv1')">Lv1</button>
+    <button onclick="startGame('lv2')">Lv2</button>
+    <button onclick="startGame('lv3')">Lv3</button>
+    <button onclick="startGame('expert')">エキスパート</button>
+  </div>
+</div>
+
+<canvas id="game" width="800" height="500" style="display:none;"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+let paddle, ball, blocks, speed;
+let rows, cols;
+let lives;
+let playing = false;
+function checkUnlock() {
+  if (localStorage.getItem("unlockedEXTRA") === "true") {
+    document.getElementById("extraMenu").style.display = "block";
+  }
+}
+checkUnlock();
+function startGame(difficulty) {
+  document.getElementById("menu").style.display = "none";
+  canvas.style.display = "block";
+  const settings = {
+    easy:     { speed: 2.0, rows: 3,  cols: 5,  lives: 5 },
+    normal:   { speed: 2.5, rows: 5,  cols: 8,  lives: 3 },
+    hard:     { speed: 3.0, rows: 8,  cols: 12, lives: 1 },
+    lv1:      { speed: 3.5, rows: 10, cols: 20, lives: 1 },
+    lv2:      { speed: 4.5, rows: 13, cols: 23, lives: 1 },
+    lv3:      { speed: 5.5, rows: 16, cols: 27, lives: 1 },
+    expert:   { speed: 10.5, rows: 24, cols: 27, lives: 1 }
+  };
+  const config = settings[difficulty];
+  if (!config) return;
+  speed = config.speed;
+  rows = config.rows;
+  cols = config.cols;
+  lives = config.lives;
+  paddle = { x: canvas.width / 2 - 50, y: canvas.height - 20, w: 100, h: 10 };
+  ball = { x: canvas.width / 2, y: canvas.height / 2, dx: speed, dy: -speed, r: 6 };
+  blocks = [];
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      blocks.push({
+        x: x * (canvas.width / cols) + 2,
+        y: y * 20 + 30,
+        w: (canvas.width / cols) - 4,
+        h: 15,
+        hit: false
+      });
+    }
+  }
+  playing = true;
+  draw(difficulty);
+}
+document.addEventListener("mousemove", e => {
+  const rect = canvas.getBoundingClientRect();
+  paddle.x = e.clientX - rect.left - paddle.w / 2;
+});
+function draw(difficulty) {
+  if (!playing) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "blue";
+  ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+  ctx.fillStyle = "red";
+  ctx.fill();
+  ctx.closePath();
+  let remaining = 0;
+  blocks.forEach(b => {
+    if (!b.hit) {
+      ctx.fillStyle = "green";
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+      remaining++;
+    }
+  });
+  ctx.fillStyle = "black";
+  ctx.font = "16px sans-serif";
+  ctx.fillText("ライフ: " + lives, 10, 20);
+  if (remaining === 0) {
+    alert("クリア！");
+    if (difficulty === 'hard') {
+      localStorage.setItem("unlockedEXTRA", "true");
+    }
+    location.reload();
+    return;
+  }
+  ball.x += ball.dx;
+  ball.y += ball.dy;
+  if (ball.x < ball.r || ball.x > canvas.width - ball.r) ball.dx *= -1;
+  if (ball.y < ball.r) ball.dy *= -1;
+  if (
+    ball.y > paddle.y - ball.r &&
+    ball.x > paddle.x &&
+    ball.x < paddle.x + paddle.w
+  ) {
+    ball.dy *= -1;
+    const deltaX = ball.x - (paddle.x + paddle.w / 2);
+    ball.dx = deltaX * 0.1;
+  }
+  blocks.forEach(b => {
+    if (
+      !b.hit &&
+      ball.x > b.x && ball.x < b.x + b.w &&
+      ball.y > b.y && ball.y < b.y + b.h
+    ) {
+      b.hit = true;
+      ball.dy *= -1;
+    }
+  });
+  if (ball.y > canvas.height) {
+    lives--;
+    if (lives <= 0) {
+      alert("ゲームオーバー");
+      location.reload();
+      return;
+    } else {
+      ball.x = canvas.width / 2;
+      ball.y = canvas.height / 2;
+      ball.dx = speed;
+      ball.dy = -speed;
+    }
+  }
+  requestAnimationFrame(() => draw(difficulty));
+}
+</script>
+
+</div>
+
+
+
+        <div id="overlay"></div>
+        <div id="message"></div>
+
+    <script>
+        function showMessage() {
+            var overlay = document.getElementById('overlay');
+            var messageDiv = document.getElementById('message');
+
+            overlay.style.display = 'block';
+
+            messageDiv.textContent = 'Shutting down';
+
+            setTimeout(function() {
+                messageDiv.textContent = '';
+            }, 2500);
+
+            setTimeout(function() {
+                window.close();
+            }, 2600);
+        }
+    </script>
+
+<div id="info-window" class="window draggable">
+    <div class="draggable" onmousedown="startDrag(event, 'info-window')">
+        <strong>OSの詳細</strong>
+</div>
+<img src="abc.png" alt="Logo" width="440" height="105">     
+<hr>
+<h3>制作: CRAZE SNOW Softwere</h3><br>
+         <h3>バージョン: 0.4A</h3>
+<h3>CRAZE OSはオープンソースです。誰でも自由に改造し再配布することができます。</h3>
+<h3>2025/06/22</h3>
+         
+</div>
+
+<div id="CALC-window" class="window draggable">
+    <div class="draggable" onmousedown="startDrag(event, 'CALC-window')">
+        <strong>電卓</strong>
+    </div>
+    <div class="calculator">
+        <input type="text" id="adisplay" class="adisplay" disabled />
+        <div class="buttons1">
+            <button onclick="appendNumber('7')">7</button>
+            <button onclick="appendNumber('8')">8</button>
+            <button onclick="appendNumber('9')">9</button>
+            <button onclick="appendOperator('/')">/</button>
+            <button onclick="appendNumber('4')">4</button>
+            <button onclick="appendNumber('5')">5</button>
+            <button onclick="appendNumber('6')">6</button>
+            <button onclick="appendOperator('*')">*</button>
+            <button onclick="appendNumber('1')">1</button>
+            <button onclick="appendNumber('2')">2</button>
+            <button onclick="appendNumber('3')">3</button>
+            <button onclick="appendOperator('-')">-</button>
+            <button onclick="appendNumber('0')">0</button>
+            <button onclick="appendOperator('+')">+</button>
+            <button onclick="appendParentheses('(')">(</button>
+            <button onclick="appendParentheses(')')">)</button>
+            <button onclick="appendDecimal()">.</button>
+            <button onclick="calculateFactorial()">!</button>
+            <button onclick="calculateResult()" class="equal">=</button>
+            <button onclick="clearDisplay()" class="clear">C</button>
+        </div>
+    </div>
+    </div>
+    <script>
+        let display = document.getElementById("adisplay");
+
+        // 数字ボタンを押した時の処理
+        function appendNumber(number) {
+            display.value += number;
+        }
+
+        // 演算子ボタンを押した時の処理
+        function appendOperator(operator) {
+            display.value += ` ${operator} `;
+        }
+
+        // 括弧ボタンを押した時の処理
+        function appendParentheses(parenthesis) {
+            display.value += parenthesis;
+        }
+
+        // Cボタンで表示をクリア
+        function clearDisplay() {
+            display.value = '';
+        }
+
+        // 結果を計算する処理
+        function calculateResult() {
+            try {
+                display.value = eval(display.value);
+            } catch (e) {
+                display.value = 'エラー';
+            }
+        }
+
+        // 小数点を追加する処理
+        function appendDecimal() {
+            // 入力された値に小数点が含まれていない場合のみ小数点を追加
+            if (!display.value.includes('.')) {
+                display.value += '.';
+            }
+        }
+
+        // 階乗を計算する処理
+        function calculateFactorial() {
+            let value = display.value;
+            if (value.match(/^\d+$/)) { // 数字だけが入力されているかチェック
+                let num = parseInt(value);
+                if (num < 0) {
+                    display.value = "エラー"; // 負の数に対してはエラー
+                } else {
+                    let result = factorial(num);
+                    display.value = result;
+                }
+            } else {
+                display.value = "エラー";
+            }
+        }
+
+        // 階乗を計算する関数
+        function factorial(n) {
+            if (n === 0 || n === 1) {
+                return 1;
+            }
+            let result = 1;
+            for (let i = 2; i <= n; i++) {
+                result *= i;
+            }
+            return result;
+        }
+    </script>
+
+<div id="SETT-window" class="window draggable">
+    <div class="draggable" onmousedown="startDrag(event, 'SETT-window')">
+        <strong>設定</strong>
+    </div>
+    <h3>CRAZE OS</h3>
+    <hr>
+    Zoom: <input type="range" id="zoomRange" min="50" max="200" value="100"> <span id="zoomVal">100%</span><br>
+  <div class="task-button1" onclick="toggleWindow('info-window')">このOSの詳細</div>
+
+<hr>
+
+  <h3>デスクトップ背景</h3>
+    <input type="file" id="bgUpload" accept="image/*">
+    <button id="clearBg">背景をリセット</button>
+<style>
+    body {
+      transition: zoom 0.2s ease;
+    }
+</style>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    // Chart.jsの初期設定
+    const ctx = document.getElementById('batteryChart').getContext('2d');
+    const batteryChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'バッテリー残量 (%)',
+          data: [],
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          fill: true,
+          tension: 0.1
+        }]
+      },
+      options: {
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: '時間'
+            }
+          },
+          y: {
+            min: 0,
+            max: 100,
+            title: {
+              display: true,
+              text: '残量 (%)'
+            }
+          }
+        }
+      }
+    });
+
+    // localStorageからデータを読み込む関数
+    function loadData() {
+      const storedData = JSON.parse(localStorage.getItem('batteryData')) || [];
+      storedData.forEach(entry => {
+        batteryChart.data.labels.push(entry.time);
+        batteryChart.data.datasets[0].data.push(entry.level);
+      });
+      batteryChart.update();
+    }
+
+    // バッテリー残量を取得してチャートに追加する関数
+    async function updateBatteryLevel() {
+      if (!navigator.getBattery) {
+        alert('このブラウザはBattery APIに対応していません。');
+        return;
+      }
+
+      const battery = await navigator.getBattery();
+      const level = battery.level * 100; // 0〜1なので100倍
+      const now = new Date().toLocaleString();
+
+      // localStorageにデータを保存
+      const storedData = JSON.parse(localStorage.getItem('batteryData')) || [];
+      storedData.push({ time: now, level: level });
+      localStorage.setItem('batteryData', JSON.stringify(storedData));
+
+      // データ追加
+      batteryChart.data.labels.push(now);
+      batteryChart.data.datasets[0].data.push(level);
+
+      // 最大データ数制御（例: 20点以上になったら古いデータを削除）
+      if (batteryChart.data.labels.length > 420) {
+        batteryChart.data.labels.shift();
+        batteryChart.data.datasets[0].data.shift();
+      }
+
+      batteryChart.update();
+    }
+
+    // Ctrl+Shift+Vを押したときにダイアログ表示
+    document.addEventListener('keydown', (event) => {
+      if (event.ctrlKey && event.shiftKey && event.key === 'V') {
+        const input = prompt("削除したいデータの範囲を入力してください。例: 2025/4/26 5:50:00 - 2025/4/27 1:00:00\nまたは 'all' で全て削除");
+
+        if (input === 'all') {
+          deleteAllData();
+        } else {
+          const [startDate, endDate] = input.split(' - ');
+          if (startDate && endDate) {
+            deleteDataInRange(startDate, endDate);
+          } else {
+            alert("無効な入力です。範囲を正しく入力してください。");
+          }
+        }
+      }
+    });
+
+    // 指定した範囲のデータを削除する関数
+    function deleteDataInRange(startDate, endDate) {
+      const start = new Date(startDate).getTime();
+      const end = new Date(endDate).getTime();
+
+      const storedData = JSON.parse(localStorage.getItem('batteryData')) || [];
+      const filteredData = storedData.filter(entry => {
+        const entryTime = new Date(entry.time).getTime();
+        return entryTime < start || entryTime > end;
+      });
+
+      // 更新したデータをlocalStorageに保存
+      localStorage.setItem('batteryData', JSON.stringify(filteredData));
+      alert('指定した範囲のデータが削除されました。');
+      window.location.reload(); // ページをリロードして表示を更新
+    }
+
+    // すべてのデータを削除する関数
+    function deleteAllData() {
+      localStorage.removeItem('batteryData');
+      alert('すべてのデータが削除されました。');
+      window.location.reload(); // ページをリロードして表示を更新
+    }
+
+    // 初回実行
+    loadData();
+    updateBatteryLevel();
+
+    // 30秒ごとに実行
+    setInterval(updateBatteryLevel, 30000);
+  </script>
+
+
+<script>
+  const bgUpload = document.getElementById("bgUpload");
+  const clearBg = document.getElementById("clearBg");
+
+  // 背景画像の保存処理
+  bgUpload.addEventListener("change", function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const base64 = e.target.result;
+      document.body.style.backgroundImage = `url(${base64})`;
+      localStorage.setItem("backgroundImage", base64);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // 背景画像の読み込み処理（起動時）
+  window.addEventListener("load", () => {
+    const savedBg = localStorage.getItem("backgroundImage");
+    if (savedBg) {
+      document.body.style.backgroundImage = `url(${savedBg})`;
+      document.body.style.backgroundSize = "cover";
+      document.body.style.backgroundPosition = "center";
+    }
+  });
+
+  // 背景画像の削除ボタン
+  clearBg.addEventListener("click", () => {
+    localStorage.removeItem("backgroundImage");
+    document.body.style.backgroundImage = "none";
+  });
+</script>
+<style>
+body {
+  background-repeat: no-repeat;         /* 繰り返さない */
+  background-size: cover;               /* 画面全体に引き延ばす */
+  background-position: center center;   /* 真ん中に配置 */
+  background-attachment: fixed;         /* スクロールしても固定（任意） */
+  transition: background-image 0.3s ease;
+}
+</style>
+
+<script>
+  const zoomSlider = document.getElementById("zoomRange");
+  const zoomVal = document.getElementById("zoomVal");
+  const rangeValue = document.getElementById("rangeValue");
+
+  // 初期設定をlocalStorageから読み込む
+  window.onload = () => {
+    const savedZoom = localStorage.getItem("zoom");
+    const savedHeight = localStorage.getItem("height");
+
+    if (savedZoom) {
+      zoomSlider.value = savedZoom;
+      document.body.style.zoom = savedZoom + "%";
+      zoomVal.textContent = savedZoom + "%";
+    }
+
+    if (savedHeight) {
+      heightSlider.value = savedHeight;
+      rangeValue.textContent = savedHeight + "px";
+      document.body.style.height = savedHeight + "px";  // 高さを設定
+    }
+  };
+
+  // Zoomの変更を保存
+  zoomSlider.addEventListener("input", () => {
+    const zoomPercent = zoomSlider.value;
+    document.body.style.zoom = zoomPercent + "%";
+    zoomVal.textContent = zoomPercent + "%";
+    localStorage.setItem("zoom", zoomPercent); // 保存
+  });
+
+  // 高さの変更を保存
+  heightSlider.addEventListener("input", () => {
+    const heightValue = heightSlider.value;
+    rangeValue.textContent = heightValue + "px";
+    document.body.style.height = heightValue + "px"; // 高さを設定
+    localStorage.setItem("height", heightValue); // 保存
+  });
+</script>
+</div>
+
+<div id="worldclock" class="window draggable">
+    <div class="draggable" onmousedown="startDrag(event, 'worldclock')">
+        <strong>世界の時間</strong>
+    </div>
+       <script>
+    function formatTime(date) {
+      const options = {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+        timeZoneName: 'short'
+      };
+      return date.toLocaleString('ja-JP', options).replace(',', '');
+    }
+    function updateTime() {
+      const timezones = {
+        "ロンドン": "Europe/London",
+        "モスクワ": "Europe/Moscow",
+        "ニューヨーク": "America/New_York",
+        "ロサンゼルス": "America/Los_Angeles",
+        "日本": "Asia/Tokyo",
+        "北京": "Asia/Shanghai",
+        "ウランバートル": "Asia/Ulaanbaatar",
+        "ハワイ": "Pacific/Honolulu",
+      };
+      for (const city in timezones) {
+        const date = new Date().toLocaleString('en-US', { timeZone: timezones[city] });
+        const formattedDate = formatTime(new Date(date));
+        document.getElementById(city).innerText = `${city}: ${formattedDate}`;
+      }
+    }
+    setInterval(updateTime, 1000);
+    window.onload = updateTime;
+  </script>
+
+  <p id="ロンドン">ロンドン: Loading...</p>
+  <p id="モスクワ">モスクワ: Loading...</p>
+  <p id="ニューヨーク">ニューヨーク: Loading...</p>
+  <p id="ロサンゼルス">ロサンゼルス: Loading...</p>
+  <p id="日本">日本: Loading...</p>
+  <p id="北京">北京: Loading...</p>
+  <p id="ウランバートル">ウランバートル: Loading...</p>
+  <p id="ハワイ">ハワイ: Loading...</p>
+</div>
+
+
+<div id="COCE-window" class="window draggable">
+    <div class="draggable" onmousedown="startDrag(event, 'COCE-window')">
+        <strong>CRAZE OS Code Editor 0.2</strong>
+    </div>
+<div id="code-list"></div>
+<textarea id="code" placeholder="Write HTML, CSS, and JS here..." style="width: 1298px; height: 140px;"></textarea>
+<br>
+<br>
+<iframe id="preview" width="1295" height="343"></iframe>
+
+<br>
+<br>
+<div class="actions">
+    <button onclick="saveData()">Save</button>
+    <button onclick="clearData()">Clear</button>
+    <button onclick="downloadHTML()">Download HTML</button>
+</div>
+
+</div>
+    <div id="memo-window" class="window draggable">
+        <div class="draggable" onmousedown="startDrag(event, 'memo-window')">
+            <strong>メモ帳</strong>
+        </div>
+        <textarea id="memoArea" placeholder="ここにメモを入力"></textarea><br>
+        <button onclick="saveMemo()">保存</button>
+        <button onclick="loadMemo()">読み込み</button>
+        <button onclick="clearMemo()">クリア</button>
+    </div>
+
+    <div id="media-window" class="window draggable">
+        <div class="draggable" onmousedown="startDrag(event, 'media-window')">
+            <strong>メディアプレーヤー</strong>
+        </div>
+    <input type="file" id="fileInput" accept="image/*, video/*">
+    <br>
+    <img id="previewa" alt="プレビュー画像">
+    <video id="videoPreview" controls></video>
+    </div>
+
+    <div id="clock-window" class="window draggable">
+        <div class="draggable" onmousedown="startDrag(event, 'clock-window')">
+            <strong>時計</strong>
+        </div>
+        <h2><div id="tokei"></div></h2>
+<hr>
+  <div class="calendar">
+    <div class="calendar-header">
+      <button onclick="changeMonth(-1)">&lt;</button>
+      <h3 id="monthYear"></h3>
+      <button onclick="changeMonth(1)">&gt;</button>
+    </div>
+    <div class="calendar-body">
+      <div class="calendar-weekdays">
+        <div>日</div>
+        <div>月</div>
+        <div>火</div>
+        <div>水</div>
+        <div>木</div>
+        <div>金</div>
+        <div>土</div>
+      </div>
+      <div class="calendar-dates" id="calendarDates"></div>
+    </div>
+  </div><br><hr>
+<input type="number" id="hours" placeholder="時" min="0" style="width: 50px;">
+<input type="number" id="minutes" placeholder="分" min="0" max="59" style="width: 50px;">
+<input type="number" id="seconds" placeholder="秒" min="0" max="59" style="width: 50px;">
+<h1><span id="timer">00:00:00</span></h1>
+<button onclick="startTimer()">スタート</button>
+<hr>
+        <div class="stopwatch">
+            <h1><div class="time" id="display">00:00:00.000</div></h1>
+            <div class="buttons">
+                <button class="button start" onclick="startStopwatch()">スタート</button>
+                <button class="button stop" onclick="stopStopwatch()">ストップ</button>
+                <button class="button reset" onclick="resetStopwatch()">リセット</button>
+            </div>
+        </div>
+        <hr>
+        <h3><div class="task-button1" onclick="toggleWindow('worldclock')">世界の時計</div></h3>
+    </div>
+<script>
+    function adjustWindowSize(windowId) {
+        const windowElement = document.getElementById(windowId);
+        if (windowElement) {
+            windowElement.style.width = `${windowElement.scrollWidth}px`;
+            windowElement.style.height = `${windowElement.scrollHeight}px`;
+
+            const maxWidth = window.innerWidth * 0.9;
+            const maxHeight = window.innerHeight * 0.9;
+
+            if (windowElement.offsetWidth > maxWidth) {
+                windowElement.style.width = `${maxWidth}px`;
+            }
+            if (windowElement.offsetHeight > maxHeight) {
+                windowElement.style.height = `${maxHeight}px`;
+            }
+        }
+    }
+
+    function toggleWindow(windowId) {
+        const windowElement = document.getElementById(windowId);
+        if (windowElement.style.display === "none") {
+            windowElement.style.display = "block";
+            adjustWindowSize(windowId); // 表示する際にサイズを調整
+        } else {
+            windowElement.style.display = "none";
+        }
+    }
+</script>
+<script>
+let timer;
+function startTimer() {
+    const hours = parseInt(document.getElementById("hours").value) || 0;
+    const minutes = parseInt(document.getElementById("minutes").value) || 0;
+    const seconds = parseInt(document.getElementById("seconds").value) || 0;
+    let totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    
+    if (timer) {
+        clearInterval(timer);
+    }
+    timer = setInterval(function() {
+        if (totalSeconds <= 0) {
+            clearInterval(timer);
+            document.getElementById("timer").innerText = "タイムアップ！";
+        } else {
+            totalSeconds--;
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            const s = totalSeconds % 60;
+            document.getElementById("timer").innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+    }, 1000);
+}
+</script>
+
+    </div>
+<script>
+  const codeInput = document.getElementById('code');
+  const previewFrame = document.getElementById('preview');
+  const codeList = document.getElementById('code-list');
+
+  let savedCodes = JSON.parse(localStorage.getItem('savedCodes')) || {};
+
+  const updateCodeList = () => {
+    codeList.innerHTML = '';
+    const names = Object.keys(savedCodes);
+    names.forEach((name, index) => {
+      const item = document.createElement('div');
+      item.className = 'code-item';
+
+      const input = document.createElement('input');
+      input.value = name;
+      input.addEventListener('change', () => renameCode(name, input.value));
+
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.onclick = (e) => {
+        e.stopPropagation();
+        deleteCode(name);
+      };
+
+      item.appendChild(input);
+      item.addEventListener('click', () => loadCode(name));
+      item.appendChild(deleteButton);
+      codeList.appendChild(item);
+
+      // 5個ごとに改行を挿入
+      if ((index + 1) % 5 === 0) {
+        const br = document.createElement('br');
+        codeList.appendChild(br);
+      }
+    });
+  };
+
+  const saveData = () => {
+    const name = prompt('Enter a name for this code:');
+    if (name) {
+      savedCodes[name] = codeInput.value;
+      localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
+      updateCodeList();
+      alert('Code saved!');
+    }
+  };
+
+  const loadCode = (name) => {
+    codeInput.value = savedCodes[name] || '';
+    updatePreview();
+  };
+
+  const deleteCode = (name) => {
+    if (confirm(`Are you sure you want to delete "${name}"?`)) {
+      delete savedCodes[name];
+      localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
+      updateCodeList();
+    }
+  };
+
+  const renameCode = (oldName, newName) => {
+    if (newName && oldName !== newName) {
+      savedCodes[newName] = savedCodes[oldName];
+      delete savedCodes[oldName];
+      localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
+      updateCodeList();
+    }
+  };
+
+  const updatePreview = () => {
+    previewFrame.srcdoc = codeInput.value;
+  };
+
+  const clearData = () => {
+    if (confirm('Are you sure you want to clear all code?')) {
+      codeInput.value = '';
+      updatePreview();
+    }
+  };
+
+  const downloadHTML = () => {
+    const name = prompt('Enter a filename for download (without extension):');
+    if (!name) return;
+    const blob = new Blob([codeInput.value], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name + '.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const loadFromURL = async () => {
+    const url = prompt('Enter the URL of the webpage:');
+    if (!url) return;
+
+    try {
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+      const response = await fetch(proxyUrl);
+      const data = await response.json();
+      codeInput.value = data.contents;
+      updatePreview();
+      alert('Webpage source loaded!');
+    } catch (error) {
+      alert('Failed to load webpage source. Check the URL and try again.');
+    }
+  };
+
+  codeInput.addEventListener('input', updatePreview);
+  updateCodeList();
+</script>
+<script>
+    const codeInput = document.getElementById('code');
+    const previewFrame = document.getElementById('preview');
+    const codeList = document.getElementById('code-list');
+
+    let savedCodes = JSON.parse(localStorage.getItem('savedCodes')) || {};
+
+    const updateCodeList = () => {
+        codeList.innerHTML = '';
+        Object.keys(savedCodes).forEach(name => {
+            const item = document.createElement('div');
+            item.className = 'code-item';
+
+            const input = document.createElement('input');
+            input.value = name;
+            input.addEventListener('change', () => renameCode(name, input.value));
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = () => deleteCode(name);
+
+            item.appendChild(input);
+            item.addEventListener('click', () => loadCode(name));
+            item.appendChild(deleteButton);
+            codeList.appendChild(item);
+        });
+    };
+
+    const saveData = () => {
+        const name = prompt('Enter a name for this code:');
+        if (name) {
+            savedCodes[name] = codeInput.value;
+            localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
+            updateCodeList();
+            alert('Code saved!');
+        }
+    };
+
+    const loadCode = (name) => {
+        codeInput.value = savedCodes[name] || '';
+        updatePreview();
+    };
+
+    const deleteCode = (name) => {
+        if (confirm(`Are you sure you want to delete "${name}"?`)) {
+            delete savedCodes[name];
+            localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
+            updateCodeList();
+        }
+    };
+
+    const renameCode = (oldName, newName) => {
+        if (newName && oldName !== newName) {
+            savedCodes[newName] = savedCodes[oldName];
+            delete savedCodes[oldName];
+            localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
+            updateCodeList();
+        }
+    };
+
+    const updatePreview = () => {
+        previewFrame.srcdoc = codeInput.value;
+    };
+
+    const clearData = () => {
+        if (confirm('Are you sure you want to clear all code?')) {
+            codeInput.value = '';
+            updatePreview();
+        }
+    };
+
+    const downloadHTML = () => {
+        const name = prompt('Enter a filename for download (without extension):');
+        if (!name) return;
+
+        const blob = new Blob([codeInput.value], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = name + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
+
+    codeInput.addEventListener('input', updatePreview);
+    updateCodeList();
+</script>
+<script>
+function showTime() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = ('0' + (now.getMonth() + 1)).slice(-2);
+  const day = ('0' + now.getDate()).slice(-2);
+  let hour = now.getHours();
+  const minute = ('0' + now.getMinutes()).slice(-2);
+  const second = ('0' + now.getSeconds()).slice(-2);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+
+  hour = hour % 12;
+  hour = hour || 12;
+
+  const formattedTime = `${year}/${month}/${day} ${hour}:${minute}:${second} ${ampm}`;
+  document.getElementById('tokei').textContent = formattedTime;
+}
+
+setInterval(showTime, 1000);
+
+showTime();
+</script>
+<script>
+  const monthNames = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
+  let currentDate = new Date();
+
+  function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const calendarDates = document.getElementById("calendarDates");
+    calendarDates.innerHTML = "";
+
+    document.getElementById("monthYear").textContent = `${year}年 ${monthNames[month]}`;
+
+    for (let i = 0; i < firstDay; i++) {
+      calendarDates.innerHTML += "<div></div>";
+    }
+    for (let date = 1; date <= lastDate; date++) {
+      const dateDiv = document.createElement("div");
+      dateDiv.textContent = date;
+      const today = new Date();
+      if (
+        date === today.getDate() &&
+        month === today.getMonth() &&
+        year === today.getFullYear()
+      ) {
+        dateDiv.classList.add("today");
+      }
+      calendarDates.appendChild(dateDiv);
+    }
+  }
+
+  function changeMonth(delta) {
+    currentDate.setMonth(currentDate.getMonth() + delta);
+    renderCalendar();
+  }
+
+  function updateCalendarIfNeeded() {
+    const now = new Date();
+    if (
+      now.getDate() !== currentDate.getDate() ||
+      now.getMonth() !== currentDate.getMonth() ||
+      now.getFullYear() !== currentDate.getFullYear()
+    ) {
+      currentDate = now;
+      renderCalendar();
+    }
+  }
+
+  renderCalendar();
+  setInterval(updateCalendarIfNeeded, 10000);
+</script>
+   <script>
+        let startTime, updatedTime, timerInterval;
+        let elapsedTime = 0;
+        let isRunning = false;
+
+        function updateDisplay(time) {
+            const hours = Math.floor((time / (1000 * 60 * 60)) % 24).toString().padStart(2, '0');
+            const minutes = Math.floor((time / (1000 * 60)) % 60).toString().padStart(2, '0');
+            const seconds = Math.floor((time / 1000) % 60).toString().padStart(2, '0');
+            const milliseconds = (time % 1000).toString().padStart(3, '0');
+            document.getElementById("display").textContent = `${hours}:${minutes}:${seconds}.${milliseconds}`;
+        }
+
+        function startStopwatch() {
+            if (!isRunning) {
+                startTime = Date.now() - elapsedTime;
+                timerInterval = setInterval(() => {
+                    updatedTime = Date.now() - startTime;
+                    updateDisplay(updatedTime);
+                }, 10);
+                isRunning = true;
+            }
+        }
+
+        function stopStopwatch() {
+            if (isRunning) {
+                clearInterval(timerInterval);
+                elapsedTime = updatedTime;
+                isRunning = false;
+            }
+        }
+
+        function resetStopwatch() {
+            clearInterval(timerInterval);
+            elapsedTime = 0;
+            isRunning = false;
+            updateDisplay(elapsedTime);
+        }
+
+        function toggleWindow(windowId, updateFunc) {
+            const windowElement = document.getElementById(windowId);
+            windowElement.style.display = (windowElement.style.display === 'block') ? 'none' : 'block';
+            if (updateFunc) updateFunc();
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toUTCString();
+            setTimeout(updateClock, 1000);
+        }
+
+        function startDrag(e, elementId) {
+            const element = document.getElementById(elementId);
+            let offsetX = e.clientX - element.getBoundingClientRect().left;
+            let offsetY = e.clientY - element.getBoundingClientRect().top;
+
+            function dragMove(e) {
+                element.style.left = e.clientX - offsetX + 'px';
+                element.style.top = e.clientY - offsetY + 'px';
+            }
+
+            function dragEnd() {
+                document.removeEventListener('mousemove', dragMove);
+                document.removeEventListener('mouseup', dragEnd);
+            }
+
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', dragEnd);
+        }
+
+        function saveMemo() {
+            const memoContent = document.getElementById('memoArea').value;
+            localStorage.setItem('memo', memoContent);
+            alert('メモを保存しました');
+        }
+
+        function loadMemo() {
+            const memoContent = localStorage.getItem('memo');
+            if (memoContent !== null) {
+                document.getElementById('memoArea').value = memoContent;
+                alert('メモを読み込みました');
+            } else {
+                alert('保存されたメモはありません');
+            }
+        }
+
+        function clearMemo() {
+            document.getElementById('memoArea').value = '';
+            localStorage.removeItem('memo');
+            alert('メモをクリアしました');
+        }
+
+        updateClock(); 
+   </script>
+
+<script>
+    function updateBatteryStatus(battery) {
+        const batteryPercentage = Math.round(battery.level * 100);
+        document.getElementById('battery-percentage').textContent = batteryPercentage + '%';
+        
+        const batteryFill = document.getElementById('battery-fill');
+        batteryFill.style.width = batteryPercentage + '%';
+        
+        const statusText = document.getElementById('battery-status-text');
+        statusText.textContent = battery.charging ? '充電中' : '放電中';
+        
+        if (batteryPercentage > 50) {
+            batteryFill.style.backgroundColor = '#00FF00';
+        } else if (batteryPercentage > 20) {
+            batteryFill.style.backgroundColor = '#FFA500';
+        } else {
+            batteryFill.style.backgroundColor = '#FF0000';
+        }
+    }
+
+    function monitorBattery() {
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(function(battery) {
+                updateBatteryStatus(battery);
+                
+                battery.addEventListener('levelchange', () => updateBatteryStatus(battery));
+                battery.addEventListener('chargingchange', () => updateBatteryStatus(battery));
+            });
+        } else {
+            console.log('Battery Status APIはサポートされていません。');
+            document.getElementById('battery-status-text').textContent = 'バッテリー情報取得不可';
+        }
+    }
+
+    monitorBattery();
+</script>
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const imagePreview = document.getElementById('previewa');
+            const videoPreview = document.getElementById('videoPreview');
+            
+            if (file) {
+                const fileType = file.type;
+                const reader = new FileReader();
+                
+                if (fileType.startsWith('image/')) {
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                        videoPreview.style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                } else if (fileType.startsWith('video/')) {
+                    reader.onload = function(e) {
+                        videoPreview.src = e.target.result;
+                        videoPreview.style.display = 'block';
+                        imagePreview.style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('画像または動画を選択してください。');
+                }
+            } else {
+                imagePreview.style.display = 'none';
+                videoPreview.style.display = 'none';
+            }
+        });
+    </script>
+</body>
